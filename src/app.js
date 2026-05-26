@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import templatesRouter from './routes/templates.js';
 import { setDbPath } from './storage/storage.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -19,6 +20,8 @@ export function createApp(options = {}) {
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
   });
+
+  app.use('/templates', templatesRouter);
 
   return app;
 }
