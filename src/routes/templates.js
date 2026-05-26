@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import {
   createTemplate,
+  getTemplateById,
   listTemplates,
+  NotFoundError,
   ValidationError,
 } from '../services/templateService.js';
 
@@ -11,6 +13,18 @@ router.get('/', (req, res) => {
   const { tag, name } = req.query;
   const templates = listTemplates({ tag, name });
   res.status(200).json(templates);
+});
+
+router.get('/:id', (req, res) => {
+  try {
+    const template = getTemplateById(req.params.id);
+    res.status(200).json(template);
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      return res.status(404).json({ error: err.message });
+    }
+    throw err;
+  }
 });
 
 router.post('/', (req, res) => {

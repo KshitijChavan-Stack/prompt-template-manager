@@ -9,6 +9,27 @@ export class ValidationError extends Error {
   }
 }
 
+export class NotFoundError extends Error {
+  constructor(message = 'template not found') {
+    super(message);
+    this.name = 'NotFoundError';
+    this.statusCode = 404;
+  }
+}
+
+function getLatestVersion(template) {
+  const latest = template.versions.find(
+    (v) => v.version === template.currentVersion,
+  );
+  if (latest) {
+    return latest;
+  }
+
+  return template.versions.reduce((max, v) =>
+    v.version > max.version ? v : max,
+  );
+}
+
 function isMissing(value) {
   return value === undefined || value === null || value === '';
 }
@@ -60,4 +81,20 @@ export function listTemplates({ tag, name } = {}) {
 
     return true;
   });
+}
+
+export function getTemplateById(id) {
+  const { templates } = readDb();
+  const template = templates.find((t) => t.id === id);
+
+  if (!template) {
+    throw new NotFoundError();
+  }
+
+  const latestVersion = getLatestVersion(template);
+
+  return {
+    ...template,
+    content: latestVersion.content,
+  };
 }
