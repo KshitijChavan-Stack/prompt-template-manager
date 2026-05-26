@@ -34,6 +34,10 @@ function isMissing(value) {
   return value === undefined || value === null || value === '';
 }
 
+function valuesEqual(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 export function createTemplate({ name, content, tags, variables }) {
   if (isMissing(name) || isMissing(content)) {
     throw new ValidationError();
@@ -97,4 +101,47 @@ export function getTemplateById(id) {
     ...template,
     content: latestVersion.content,
   };
+}
+
+export function updateTemplate(id, { content, tags, variables }) {
+  const db = readDb();
+  const template = db.templates.find((t) => t.id === id);
+
+  if (!template) {
+    throw new NotFoundError();
+  }
+
+  const latestVersion = getLatestVersion(template);
+  const contentChanged =
+    content !== undefined && content !== latestVersion.content;
+  const tagsChanged =
+    tags !== undefined && !valuesEqual(tags, template.tags);
+  const variablesChanged =
+    variables !== undefined && !valuesEqual(variables, template.variables);
+
+  if (tags !== undefined) {
+    template.tags = tags;
+  }
+
+  if (variables !== undefined) {
+    template.variables = variables;
+  }
+
+  if (contentChanged || tagsChanged || variablesChanged) {
+    const now = new Date().toISOString();
+    const newVersion = template.currentVersion + 1;
+    const versionContent =
+      content !== undefined ? content : latestVersion.content;
+
+    template.versions.push({
+      version: newVersion,
+      content: versionContent,
+      createdAt: now,
+    });
+    template.currentVersion = newVersion;
+  }
+
+  writeDb(db);
+
+  return getTemplateById(id);
 }

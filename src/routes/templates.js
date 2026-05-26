@@ -4,6 +4,7 @@ import {
   getTemplateById,
   listTemplates,
   NotFoundError,
+  updateTemplate,
   ValidationError,
 } from '../services/templateService.js';
 
@@ -35,6 +36,23 @@ router.post('/', (req, res) => {
   } catch (err) {
     if (err instanceof ValidationError) {
       return res.status(400).json({ error: err.message });
+    }
+    throw err;
+  }
+});
+
+router.patch('/:id', (req, res) => {
+  try {
+    const { content, tags, variables } = req.body;
+    const template = updateTemplate(req.params.id, {
+      content,
+      tags,
+      variables,
+    });
+    res.status(200).json(template);
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      return res.status(404).json({ error: err.message });
     }
     throw err;
   }
