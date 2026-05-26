@@ -17,6 +17,14 @@ export class NotFoundError extends Error {
   }
 }
 
+export class VersionNotFoundError extends Error {
+  constructor(message = 'version not found') {
+    super(message);
+    this.name = 'VersionNotFoundError';
+    this.statusCode = 404;
+  }
+}
+
 function getLatestVersion(template) {
   const latest = template.versions.find(
     (v) => v.version === template.currentVersion,
@@ -144,4 +152,33 @@ export function updateTemplate(id, { content, tags, variables }) {
   writeDb(db);
 
   return getTemplateById(id);
+}
+
+export function getTemplateVersion(id, versionNumber) {
+  const { templates } = readDb();
+  const template = templates.find((t) => t.id === id);
+
+  if (!template) {
+    throw new NotFoundError();
+  }
+
+  const version = template.versions.find(
+    (v) => v.version === Number(versionNumber),
+  );
+
+  if (!version) {
+    throw new VersionNotFoundError();
+  }
+
+  return {
+    id: template.id,
+    name: template.name,
+    tags: template.tags,
+    variables: template.variables,
+    currentVersion: template.currentVersion,
+    createdAt: template.createdAt,
+    version: version.version,
+    content: version.content,
+    versionCreatedAt: version.createdAt,
+  };
 }
