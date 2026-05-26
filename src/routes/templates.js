@@ -1,10 +1,17 @@
 import { Router } from 'express';
 import {
   createTemplate,
+  listTemplates,
   ValidationError,
 } from '../services/templateService.js';
 
 const router = Router();
+
+router.get('/', (req, res) => {
+  const { tag, name } = req.query;
+  const templates = listTemplates({ tag, name });
+  res.status(200).json(templates);
+});
 
 router.post('/', (req, res) => {
   try {

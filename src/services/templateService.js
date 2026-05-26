@@ -41,3 +41,23 @@ export function createTemplate({ name, content, tags, variables }) {
 
   return template;
 }
+
+export function listTemplates({ tag, name } = {}) {
+  const { templates } = readDb();
+
+  return templates.filter((template) => {
+    if (tag != null && tag !== '' && !template.tags.includes(tag)) {
+      return false;
+    }
+
+    if (
+      name != null &&
+      name !== '' &&
+      !template.name.toLowerCase().includes(name.toLowerCase())
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+}
