@@ -8,6 +8,7 @@ import {
   updateTemplate,
   ValidationError,
   VersionNotFoundError,
+  renderTemplate
 } from '../services/templateService.js';
 
 const router = Router();
@@ -73,3 +74,21 @@ router.patch('/:id', (req, res) => {
 });
 
 export default router;
+
+
+
+
+router.post('/:id/render', (req, res) => {
+  try {
+    const result = renderTemplate(req.params.id, req.body.variables ?? {});
+    res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err instanceof NotFoundError) {
+      return res.status(404).json({ error: err.message });
+    }
+    throw err;
+  }
+});

@@ -182,3 +182,34 @@ export function getTemplateVersion(id, versionNumber) {
     versionCreatedAt: version.createdAt,
   };
 }
+
+export function renderTemplate(id, variables = {}) {
+  const { templates } = readDb();
+  const template = templates.find((t) => t.id === id);
+
+  if (!template) {
+    throw new NotFoundError();
+  }
+
+  const latestVersion = getLatestVersion(template);
+  let content = latestVersion.content;
+
+  const missing = [];
+
+  for (const declared of template.variables) {
+    const value = variables[declared.name];
+    if (value !== undefined) {
+      content = content.replaceAll(`{{${declared.name}}}`, value);
+    } else if (declared.default !== undefined) {
+      content = content.replaceAll(`{{${declared.name}}}`, declared.default);
+    } else {
+      missing.push(declared.name);
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new ValidationError(`Missing required variables: ${missing.join(', ')}`);
+  }
+
+  return { rendered: content };
+}
